@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  KASIR
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  SHOPEE
+  ONLINE
+  LAINNYA
+}
+
+enum TransactionStatus {
+  COMPLETED
+  CANCELLED
+}
+
+enum MovementType {
+  INITIAL_STOCK
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  STOCK_OPNAME
+  RECIPE_USAGE
+}
+
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  passwordHash     String
+  role             Role              @default(KASIR)
+  isActive         Boolean           @default(true)
+  transactions     Transaction[]
+  stockMovements   StockMovement[]
+  stockOpnames     StockOpname[]
+  purchaseRequests PurchaseRequest[] @relation("RequestedBy")
+  reviewedRequests PurchaseRequest[] @relation("ReviewedBy")
+  cashClosings     CashClosing[]
+  auditLogs        AuditLog[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@map("users")
+}
+
+model MenuCategory {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("menu_categories")
+}
+
+model Product {
+  id           String                @id @default(uuid())
+  name         String
+  categoryId   String
+  category     MenuCategory          @relation(fields: [categoryId], references: [id])
+  price        Decimal               @db.Decimal(12, 2)
+  costPrice    Decimal               @default(0) @db.Decimal(12, 2)
+  image        String?               @db.Text
+  description  String?               @db.Text
+  isAvailable  Boolean               @default(true)
+  isActive     Boolean               @default(true)
+  recipes      ProductRecipe[]
+  items        TransactionItem[]
+  priceHistory ProductPriceHistory[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@map("products")
+}
+
+model ProductPriceHistory {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  oldPrice  Decimal  @db.Decimal(12, 2)
+  newPrice  Decimal  @db.Decimal(12, 2)
+  changedBy String?
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@map("product_price_histories")
+}
+
+model Ingredient {
+  id                   String                @id @default(uuid())
+  name                 String
+  baseUnit             String // KG, GRAM, PCS, BTL, BKS, SASSET, TOPLES, GALON
+  currentStock         Decimal               @default(0) @db.Decimal(12, 3)
+  minimumStock         Decimal               @default(0) @db.Decimal(12, 3)
+  costPerUnit          Decimal               @default(0) @db.Decimal(12, 2)
+  isActive             Boolean               @default(true)
+  notes                String?               @db.Text
+  conversions          UnitConversion[]
+  recipes              ProductRecipe[]
+  stockMovements       StockMovement[]
+  stockOpnameItems     StockOpnameItem[]
+  purchaseRequestItems PurchaseRequestItem[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@map("ingredients")
+}
+
+model UnitConversion {
+  id             String     @id @default(uuid())
+  ingredientId   String
+  ingredient     Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  fromUnit       String // e.g. "TOPLES", "GRAM", "SASSET"
+  toUnit         String // e.g. "KG", "PCS" (usually baseUnit)
+  conversionRate Decimal    @db.Decimal(12, 4) // 1 fromUnit = conversionRate toUnit
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([ingredientId, fromUnit, toUnit])
+  @@map("unit_conversions")
+}
+
+model ProductRecipe {
+  id             String     @id @default(uuid())
+  productId      String
+  product        Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredientId   String
+  ingredient     Ingredient @relation(fields: [ingredientId], references: [id])
+  quantityNeeded Decimal    @db.Decimal(12, 3)
+  unit           String // Satuan yang tertera di resep (bisa beda dengan baseUnit)
+  createdAt      DateTime   @default(now())
+
+  @@unique([productId, ingredientId])
+  @@map("product_recipes")
+}
+
+model StockMovement {
+  id            String       @id @default(uuid())
+  ingredientId  String
+  ingredient    Ingredient   @relation(fields: [ingredientId], references: [id])
+  date          DateTime     @default(now())
+  type          MovementType
+  quantity      Decimal      @db.Decimal(12, 3) // Input asli user (e.g. 1)
+  unit          String // Satuan input asli user (e.g. TOPLES)
+  baseQuantity  Decimal      @db.Decimal(12, 3) // Hasil konversi (e.g. 0.5)
+  baseUnit      String // Base unit (e.g. KG)
+  stockBefore   Decimal      @db.Decimal(12, 3) // Dalam baseUnit
+  stockAfter    Decimal      @db.Decimal(12, 3) // Dalam baseUnit
+  referenceType String? // TRANSACTION, OPNAME, MANUAL, PURCHASE
+  referenceId   String?
+  notes         String?      @db.Text
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@map("stock_movements")
+}
+
+model StockOpname {
+  id                String            @id @default(uuid())
+  date              DateTime          @default(now())
+  status            String            @default("COMPLETED")
+  notes             String?           @db.Text
+  conductedByUserId String
+  conductedBy       User              @relation(fields: [conductedByUserId], references: [id])
+  items             StockOpnameItem[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("stock_opnames")
+}
+
+model StockOpnameItem {
+  id            String      @id @default(uuid())
+  stockOpnameId String
+  stockOpname   StockOpname @relation(fields: [stockOpnameId], references: [id], onDelete: Cascade)
+  ingredientId  String
+  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id])
+  systemStock   Decimal     @db.Decimal(12, 3)
+  physicalStock Decimal     @db.Decimal(12, 3)
+  difference    Decimal     @db.Decimal(12, 3)
+  baseUnit      String
+  notes         String?     @db.Text
+
+  @@map("stock_opname_items")
+}
+
+model PurchaseRequest {
+  id                String                @id @default(uuid())
+  requestNumber     String                @unique
+  date              DateTime              @default(now())
+  status            PurchaseRequestStatus @default(DRAFT)
+  notes             String?               @db.Text
+  requestedByUserId String
+  requestedBy       User                  @relation("RequestedBy", fields: [requestedByUserId], references: [id])
+  reviewedByUserId  String?
+  reviewedBy        User?                 @relation("ReviewedBy", fields: [reviewedByUserId], references: [id])
+  items             PurchaseRequestItem[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@map("purchase_requests")
+}
+
+model PurchaseRequestItem {
+  id                String          @id @default(uuid())
+  purchaseRequestId String
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  ingredientId      String?
+  ingredient        Ingredient?     @relation(fields: [ingredientId], references: [id])
+  ingredientName    String
+  quantity          Decimal         @db.Decimal(12, 3)
+  unit              String
+  notes             String?         @db.Text
+
+  @@map("purchase_request_items")
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  invoiceNumber String            @unique
+  date          DateTime          @default(now())
+  cashierId     String
+  cashier       User              @relation(fields: [cashierId], references: [id])
+  customerCount Int               @default(1) // Jumlah pembeli
+  subtotal      Decimal           @db.Decimal(12, 2)
+  discount      Decimal           @default(0) @db.Decimal(12, 2)
+  total         Decimal           @db.Decimal(12, 2)
+  paymentMethod PaymentMethod     @default(CASH)
+  cashReceived  Decimal?          @db.Decimal(12, 2)
+  cashChange    Decimal?          @db.Decimal(12, 2)
+  status        TransactionStatus @default(COMPLETED)
+  notes         String?           @db.Text
+  items         TransactionItem[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id                String      @id @default(uuid())
+  transactionId     String
+  transaction       Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id])
+  productName       String
+  quantity          Int
+  priceSnapshot     Decimal     @db.Decimal(12, 2)
+  costPriceSnapshot Decimal     @default(0) @db.Decimal(12, 2)
+  subtotal          Decimal     @db.Decimal(12, 2)
+  notes             String?     @db.Text
+
+  @@map("transaction_items")
+}
+
+model CashClosing {
+  id                String   @id @default(uuid())
+  cashierId         String
+  cashier           User     @relation(fields: [cashierId], references: [id])
+  date              DateTime @default(now())
+  openingBalance    Decimal  @default(0) @db.Decimal(12, 2)
+  expectedCash      Decimal  @db.Decimal(12, 2)
+  actualCash        Decimal  @db.Decimal(12, 2)
+  difference        Decimal  @db.Decimal(12, 2)
+  totalTransactions Int      @default(0)
+  totalCustomers    Int      @default(0)
+  totalCashSales    Decimal  @default(0) @db.Decimal(12, 2)
+  totalQrisSales    Decimal  @default(0) @db.Decimal(12, 2)
+  totalShopeeSales  Decimal  @default(0) @db.Decimal(12, 2)
+  totalOnlineSales  Decimal  @default(0) @db.Decimal(12, 2)
+  totalSales        Decimal  @default(0) @db.Decimal(12, 2)
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("cash_closings")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?  @db.Text
+  newValue  String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?  @db.Text
+  updatedAt   DateTime @updatedAt
+
+  @@map("settings")
+}
