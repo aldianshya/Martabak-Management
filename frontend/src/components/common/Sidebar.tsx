@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import martabakImage from "../../assets/rap.jpg";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   LayoutDashboard,
@@ -30,9 +31,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, isAdmin, logout } = useAuth();
 
   const isActive = (path: string) => {
-    if (path === "/dashboard" && location.pathname === "/dashboard") return true;
-    if (path === "/inventory" && location.pathname === "/inventory") return true;
-    if (path === "/reports" && location.pathname.startsWith("/reports")) return true;
+    if (path === "/dashboard" && location.pathname === "/dashboard")
+      return true;
+    if (path === "/inventory" && location.pathname === "/inventory")
+      return true;
+    if (path === "/reports" && location.pathname.startsWith("/reports"))
+      return true;
     if (path !== "/dashboard" && path !== "/inventory" && path !== "/reports") {
       return location.pathname.startsWith(path);
     }
@@ -71,9 +75,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       adminOnly: false,
       items: [
         { label: "Stok Bahan", path: "/inventory", icon: Boxes },
-        { label: "Konversi Satuan", path: "/inventory/conversions", icon: Scale, adminOnly: true },
-        { label: "Mutasi Stok", path: "/inventory/movements", icon: ArrowLeftRight, adminOnly: true },
-        { label: "Stok Opname", path: "/inventory/stock-opname", icon: ClipboardCheck },
+        {
+          label: "Konversi Satuan",
+          path: "/inventory/conversions",
+          icon: Scale,
+          adminOnly: true,
+        },
+        {
+          label: "Mutasi Stok",
+          path: "/inventory/movements",
+          icon: ArrowLeftRight,
+          adminOnly: true,
+        },
+        {
+          label: "Stok Opname",
+          path: "/inventory/stock-opname",
+          icon: ClipboardCheck,
+        },
         { label: "Permintaan Barang", path: "/purchase-requests", icon: Truck },
       ],
     },
@@ -82,7 +100,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       adminOnly: false,
       items: [
         { label: "Tutup Kasir", path: "/cash-closing", icon: DollarSign },
-        { label: "Laporan & Rekap", path: "/reports", icon: BarChart3, adminOnly: true },
+        {
+          label: "Laporan & Rekap",
+          path: "/reports",
+          icon: BarChart3,
+          adminOnly: true,
+        },
       ],
     },
     {
@@ -113,12 +136,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800 bg-slate-950">
           <Link to="/dashboard" className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white font-black text-xl shadow-lg shadow-brand-500/30">
-              🥞
+            <div className="h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-brand-500/30">
+              <img
+                src={martabakImage}
+                alt="Martabak"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div>
-              <div className="text-sm font-extrabold text-white tracking-wider">MARTABAK POS</div>
-              <div className="text-[10px] font-medium text-brand-400">MANAGEMENT SUITE</div>
+              <div className="text-sm font-extrabold text-white tracking-wider">
+                MARTABAK RAP
+              </div>
+              <div className="text-[10px] font-medium text-brand-400">
+                MANAGEMENT SUITE
+              </div>
             </div>
           </Link>
           <button
@@ -135,7 +166,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             if (group.adminOnly && !isAdmin) return null;
 
             if (group.items) {
-              const visibleItems = group.items.filter((item) => !item.adminOnly || isAdmin);
+              const visibleItems = group.items.filter(
+                (item) => !item.adminOnly || isAdmin,
+              );
               if (visibleItems.length === 0) return null;
 
               return (
@@ -157,7 +190,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             : "text-slate-300 hover:bg-slate-800 hover:text-white"
                         }`}
                       >
-                        <Icon className={`h-4 w-4 ${active ? "text-white" : "text-slate-400"}`} />
+                        <Icon
+                          className={`h-4 w-4 ${active ? "text-white" : "text-slate-400"}`}
+                        />
                         <span>{item.label}</span>
                       </Link>
                     );
@@ -179,7 +214,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${active ? "text-white" : "text-slate-400"}`} />
+                  <Icon
+                    className={`h-4 w-4 ${active ? "text-white" : "text-slate-400"}`}
+                  />
                   <span>{group.label}</span>
                 </Link>
               </div>
@@ -195,7 +232,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 {user?.name?.charAt(0) || "U"}
               </div>
               <div className="truncate text-xs">
-                <div className="font-bold text-white truncate">{user?.name}</div>
+                <div className="font-bold text-white truncate">
+                  {user?.name}
+                </div>
                 <div className="text-[10px] text-slate-400">{user?.role}</div>
               </div>
             </div>

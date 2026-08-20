@@ -1,15 +1,31 @@
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight, ShieldCheck, UserCheck } from "lucide-react";
+import martabakImage from "../../assets/rap.jpg";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  AlertCircle,
+  ArrowRight,
+  ShieldCheck,
+  UserCheck,
+} from "lucide-react";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [emailPlaceholder, setEmailPlaceholder] = useState("Email");
+  const [passwordPlaceholder, setPasswordPlaceholder] = useState("Password");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"admin" | "kasir" | null>(
+    null,
+  );
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -52,7 +68,11 @@ export const LoginPage: React.FC = () => {
         {/* Brand Card Header */}
         <div className="text-center mb-6">
           <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-xl shadow-brand-500/30 text-3xl font-black mb-3 ring-4 ring-brand-500/20">
-            🥞
+            <img
+                src={martabakImage}
+                alt="Martabak"
+                className="h-full w-full object-cover"
+              />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
             Sistem Manajemen Martabak
@@ -65,8 +85,12 @@ export const LoginPage: React.FC = () => {
         {/* Main Form Container */}
         <div className="rounded-3xl bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-2xl border border-white/20">
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900">Masuk ke Sistem</h2>
-            <p className="text-xs text-slate-500">Silakan masukkan akun kasir atau pemilik</p>
+            <h2 className="text-lg font-bold text-slate-900">
+              Masuk ke Sistem
+            </h2>
+            <p className="text-xs text-slate-500">
+              Silakan masukkan akun kasir atau pemilik
+            </p>
           </div>
 
           {error && (
@@ -78,7 +102,9 @@ export const LoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Email / Username</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Email / Username
+              </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                   <Mail className="h-4 w-4" />
@@ -87,7 +113,7 @@ export const LoginPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@martabak.local"
+                  placeholder={emailPlaceholder || "Email"}
                   required
                   className="w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-10 pr-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-medium focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition"
                 />
@@ -95,7 +121,9 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Kata Sandi</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Kata Sandi
+              </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                   <Lock className="h-4 w-4" />
@@ -113,7 +141,11 @@ export const LoginPage: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -126,7 +158,9 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
-                <span className="text-xs font-medium text-slate-600">Ingat sesi saya</span>
+                <span className="text-xs font-medium text-slate-600">
+                  Ingat sesi saya
+                </span>
               </label>
             </div>
 
@@ -154,8 +188,16 @@ export const LoginPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin("admin@martabak.local", "Admin123!")}
-                className="flex items-center justify-center space-x-1.5 rounded-lg bg-purple-50 border border-purple-200 py-2 px-2 text-[11px] font-bold text-purple-700 hover:bg-purple-100 transition"
+                onClick={() => {
+                  setSelectedRole("admin");
+                  setEmailPlaceholder("admin@martabak.local");
+                  setPasswordPlaceholder("Admin123!");
+                }}
+                className={`flex items-center justify-center space-x-1.5 rounded-lg border py-2 px-2 text-[11px] font-bold transition ${
+                  selectedRole === "admin"
+                    ? "bg-purple-100 border-purple-300 text-purple-700 shadow-sm"
+                    : "bg-purple-50/40 border-purple-200/50 text-purple-700/40"
+                }`}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>Admin / Owner</span>
@@ -163,8 +205,16 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin("kasir@martabak.local", "Kasir123!")}
-                className="flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-50 border border-emerald-200 py-2 px-2 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                onClick={() => {
+                  setSelectedRole("kasir");
+                  setEmailPlaceholder("kasir@martabak.local");
+                  setPasswordPlaceholder("Admin123!");
+                }}
+                className={`flex items-center justify-center space-x-1.5 rounded-lg border py-2 px-2 text-[11px] font-bold transition ${
+                  selectedRole === "kasir"
+                    ? "bg-emerald-100 border-emerald-300 text-emerald-700 shadow-sm"
+                    : "bg-emerald-50/40 border-emerald-200/50 text-emerald-700/40"
+                }`}
               >
                 <UserCheck className="h-3.5 w-3.5" />
                 <span>Kasir Shift</span>
