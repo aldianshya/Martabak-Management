@@ -94,17 +94,22 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
         {/* Header bar */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3">
-          <div className="font-bold text-slate-800 text-sm flex items-center">
-            <span className="mr-2 text-brand-500">🧾</span> Struk Transaksi
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        {/* Header bar */}
+<div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3">
+  <div className="font-bold text-slate-800 text-sm flex items-center">
+    <span className="mr-2 text-brand-500">🧾</span>
+    Struk Transaksi
+  </div>
+
+  <button
+    type="button"
+    onClick={onClose}
+    className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition cursor-pointer"
+    aria-label="Tutup struk"
+  >
+    <X className="h-4 w-4" />
+  </button>
+</div>
 
         {/* Receipt Paper Area */}
         <div className="p-6 bg-slate-100 flex justify-center max-h-[65vh] overflow-y-auto">

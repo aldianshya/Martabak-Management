@@ -319,15 +319,17 @@ export const TransactionsPage: React.FC = () => {
       </div>
 
       {/* Struk Modal */}
-      <ReceiptModal
-        transaction={selectedTx}
-        storeName={settings.store_name}
-        storeAddress={settings.store_address}
-        storePhone={settings.store_phone}
-        receiptHeader={settings.receipt_header}
-        receiptFooter={settings.receipt_footer}
-        onClose={() => setModalOpen(false)}
-      />
+      {selectedTx && (
+  <ReceiptModal
+    transaction={selectedTx}
+    storeName={settings.store_name}
+    storeAddress={settings.store_address}
+    storePhone={settings.store_phone}
+    receiptHeader={settings.receipt_header}
+    receiptFooter={settings.receipt_footer}
+    onClose={() => setSelectedTx(null)}
+  />
+)}
     </div>
   );
 };

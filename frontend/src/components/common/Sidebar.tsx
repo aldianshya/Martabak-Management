@@ -19,6 +19,7 @@ import {
   Scale,
   LogOut,
   X,
+  Send,
 } from "lucide-react";
 
 interface SidebarProps {
